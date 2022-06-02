@@ -1,9 +1,11 @@
+
 from flask import Flask, request
-import csv
+from save_data import SaveData
 import datetime
 
 app = Flask(__name__)
-data = []
+
+sd = SaveData()
 
 @app.route('/', methods=['POST'])
 def receive_data_from_arduino():
@@ -17,15 +19,24 @@ def receive_data_from_arduino():
     humidity = request.args.get('humidity')
     print(f'humidity: {humidity}')
     row.append(humidity)
-    data.append(row)
+    sd.row_append(row)
     return 'OK'
 
 @app.route('/', methods=['GET'])
-def write_data_to_csv():
-    with open('data.csv', 'w', newline='', encoding='UTF8') as f:
-        writer = csv.writer(f)
-        writer.writerows(data)
-    return '<p>write data to csv</p>'
+def main_page():
+  sd._save_data()
+  sd.clear_buffer()
+  return '''
+    <html>
+      <head>
+        <link rel="stylesheet" href="/static/css/app.css">
+      </head>
+      <body>
+        <a class="button" href="/"">Save</a>
+        <a class="button" href="/static/data.csv" download="data.csv">Download</a>
+      </body>
+    </html>
+  '''
 
 
 if __name__ == '__main__':
